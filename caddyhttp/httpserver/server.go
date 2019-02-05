@@ -296,7 +296,7 @@ func (s *Server) WrapListener(ln net.Listener) net.Listener {
 	return cln
 }
 
-// ListenPacket creates udp connection for QUIC if it is enabled,
+// ListenPacket creates udp connection for QUIC if it is enabled.
 func (s *Server) ListenPacket() (net.PacketConn, error) {
 	if QUIC {
 		udpAddr, err := net.ResolveUDPAddr("udp", s.Server.Addr)
@@ -333,16 +333,19 @@ func (s *Server) Serve(ln net.Listener) error {
 	if err == http.ErrServerClosed {
 		err = nil // not an error worth reporting since closing a server is intentional
 	}
-	if s.quicServer != nil {
-		s.quicServer.Close()
-	}
 	return err
 }
 
 // ServePacket serves QUIC requests on pc until it is closed.
 func (s *Server) ServePacket(pc net.PacketConn) error {
 	if s.quicServer != nil {
-		err := s.quicServer.Serve(pc.(*net.UDPConn))
+		pc.Close()
+		var err error
+		pc, err = s.ListenPacket()
+		if err != nil {
+			return fmt.Errorf("listen packet: %v", err)
+		}
+		err = s.quicServer.Serve(pc.(*net.UDPConn))
 		return fmt.Errorf("serving QUIC connections: %v", err)
 	}
 	return nil
@@ -499,6 +502,10 @@ func (s *Server) Stop() error {
 	// signal any TLS governor goroutines to exit
 	if s.tlsGovChan != nil {
 		close(s.tlsGovChan)
+	}
+
+	if s.quicServer != nil {
+		s.quicServer.Close()
 	}
 
 	return nil
