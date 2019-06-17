@@ -46,6 +46,7 @@ func init() {
 	flag.DurationVar(&GracefulTimeout, "grace", 5*time.Second, "Maximum duration of graceful shutdown")
 	flag.BoolVar(&HTTP2, "http2", true, "Use HTTP/2")
 	flag.BoolVar(&QUIC, "quic", false, "Use experimental QUIC")
+	flag.BoolVar(&NOTCP, "no-tcp", false, "disable TCP")
 
 	caddy.RegisterServerType(serverType, caddy.ServerType{
 		Directives: func() []string { return directives },
@@ -724,6 +725,9 @@ var (
 	// QUIC indicates whether QUIC is enabled or not.
 	QUIC bool
 
+	// NOTCP indicates TCP is enabled or not.
+	NOTCP bool
+	
 	// HTTPPort is the port to use for HTTP.
 	HTTPPort = DefaultHTTPPort
 

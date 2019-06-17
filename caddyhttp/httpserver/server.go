@@ -244,6 +244,10 @@ func (s *Server) wrapWithSvcHeaders(previousHandler http.Handler) http.HandlerFu
 // Listen creates an active listener for s that can be
 // used to serve requests.
 func (s *Server) Listen() (net.Listener, error) {
+	if NOTCP {
+		return nil
+	}
+
 	if s.Server == nil {
 		return nil, fmt.Errorf("server field is nil")
 	}
@@ -309,6 +313,10 @@ func (s *Server) ListenPacket() (net.PacketConn, error) {
 
 // Serve serves requests on ln. It blocks until ln is closed.
 func (s *Server) Serve(ln net.Listener) error {
+	if ln == nil {
+		return nil
+	}
+	
 	if s.Server.TLSConfig != nil {
 		// Create TLS listener - note that we do not replace s.listener
 		// with this TLS listener; tls.listener is unexported and does
